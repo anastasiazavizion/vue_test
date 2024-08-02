@@ -1,5 +1,7 @@
 <script setup>
-import {computed, ref, watch} from "vue";
+import {computed, provide, ref, watch} from "vue";
+import PostData from "./components/PostData.vue";
+import NewPost from "./components/NewPost.vue";
 
 const test = '<h1>Test</h1>'
 const counter = ref(0);
@@ -48,9 +50,6 @@ watch(result, function (){
     result.value = 0;
   }, 5000)
 })
-
-const ASelected = false;
-const BSelected = false;
 
 const divs = ref([
   {
@@ -103,10 +102,57 @@ const showTasks = ref(true);
 const toggleTasksBtnTitle = computed(()=>{
   return showTasks.value ? 'Hide' : 'Show' + 'tasks';
 })
+
+
+
+const posts = ref([{id:1, title:'Title1', fav:true,}, {id:2, title:'Title2', fav:false}]);
+
+function toggleFav(id, title){
+  const post = posts.value.find(p => p.id === id);
+  post.fav = !post.fav;
+}
+function addNewPost(title){
+
+  let newId = 1;
+  if(posts.value > 0){
+    const maxIdPost = posts.value.reduce(
+        (prev, current) => {
+          return prev.id > current.id ? prev : current
+        }
+    );
+    newId = maxIdPost.id + 1;
+  }
+
+  posts.value.push({
+    id:newId,
+    title:title,
+    fav:false
+  })
+
+  console.log(posts.value);
+}
+
+function deletePost(id){
+
+  posts.value = posts.value.filter((p)=> p.id !== id);
+  //delete posts.value[index];
+}
+
+provide('posts',posts);
+
+
+
 </script>
 
 <template>
 <div>
+
+  <NewPost @add-new-post="addNewPost"></NewPost>
+  <div :key="post.title" v-for="post in posts">
+    <PostData @delete-post="deletePost" @toggle-fav="toggleFav" :post="post"></PostData>
+  </div>
+
+
 <button @click="increase(2)">Increase</button>
 <button @click="descrease">Decrease</button>
   <div>Counter = {{counter}}</div>
@@ -163,18 +209,6 @@ const toggleTasksBtnTitle = computed(()=>{
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
 
 .borderActive{
   border: 1px solid green;
